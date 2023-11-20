@@ -1,5 +1,6 @@
 
-using Core.Interfaces;
+using API.Extensions;
+using API.Middleware;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,14 +11,27 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddControllers();
-builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<StoreContext>(opt=> {opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));});
-builder.Services.AddScoped<IProductRepository,ProductRepository>();
-builder.Services.AddScoped(typeof(IGenericRepository<>),typeof(GenericRepository<>));
-
-
+builder.Services.AddApplicationServices(builder.Configuration);
+// builder.Services.AddSwaggerGen();
+// builder.Services.AddDbContext<StoreContext>(opt=> {opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));});
+// builder.Services.AddScoped<IProductRepository,ProductRepository>();
+// builder.Services.AddScoped(typeof(IGenericRepository<>),typeof(GenericRepository<>));
+// builder.Services.AddAutoMapper(typeof(Program));
+// builder.Services.Configure<ApiBehaviorOptions>(options => {
+//     options.InvalidModelStateResponseFactory = ActionContext =>
+//     {
+//         var error =ActionContext.ModelState.Where(e => e.Value?.Errors.Count >0)
+//         .SelectMany(x => x.Value.Errors)
+//         .Select(x => x.ErrorMessage).ToArray();
+//         var errorResponse= new ApiValidationErrorResponse{
+//             Errors=error
+//         };
+//         return new BadRequestObjectResult(errorResponse);
+//      };
+// });
 var app = builder.Build();
-
+app.UseMiddleware<ExceptionMiddleware>();
+app.UseStatusCodePagesWithRedirects("/error/{0}");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -27,10 +41,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+// var summaries = new[]
+// {
+//     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+// };
 
 // app.MapGet("/weatherforecast", () =>
 // {
@@ -69,7 +83,7 @@ catch (Exception ex)
 }
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+// record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+// {
+//     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+// }
