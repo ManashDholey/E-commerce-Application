@@ -1,4 +1,11 @@
 <app-nav-bar></app-nav-bar>
-<span>{{ title }} app is running!</span>
+<div class="contener" style="margin-top: 140px;">
+    <span>{{ title }} app is running!</span>
+    <ul>
+        <li class="list-unstyled" *ngFor="let product of products">
+        {{product.name}}</li>
+    </ul>
+</div>
+
 
 <router-outlet></router-outlet>
