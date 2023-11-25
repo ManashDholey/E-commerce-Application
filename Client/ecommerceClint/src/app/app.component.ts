@@ -18,18 +18,18 @@ export class AppComponent implements OnInit{
 constructor(private http: HttpClient){}
 
   ngOnInit(): void {
-    try{
-    this.http.get<Pagination<Product[]>>(`https://localhost:5001/api/Products?PageIndex=${this.PageIndex}&PageSize=${this.PageSize}&Sort=${this.Sort}&Search=${this.Search}`).subscribe({
-      next: response =>{ console.log(response);
-      this.products=response.data},
-      error: error=> console.log(error),
-      complete:()=>{
-        console.log('request completed');
-        console.log('extra statement.');
-      }
-    })
-  }catch(e){
-console.log(e);
-  }
+//     try{
+//     this.http.get<Pagination<Product[]>>(`https://localhost:5001/api/Products?PageIndex=${this.PageIndex}&PageSize=${this.PageSize}&Sort=${this.Sort}&Search=${this.Search}`).subscribe({
+//       next: response =>{ console.log(response);
+//       this.products=response.data},
+//       error: error=> console.log(error),
+//       complete:()=>{
+//         console.log('request completed');
+//         console.log('extra statement.');
+//       }
+//     })
+//   }catch(e){
+// console.log(e);
+//   }
   }
 }
