@@ -14,7 +14,9 @@ baseUrl='https://localhost:5001/api/';
 
 shopParams = new ShopParams();
   constructor(private http: HttpClient) { }
-
+  getProduct(id:number){
+    return this.http.get<Product>(this.baseUrl+'products/'+id);
+  }
   getProducts(brandId?:number,typeId?:number) {
     let params = new HttpParams();
     if (this.shopParams.brandId > 0) params = params.append('brandId', this.shopParams.brandId);
