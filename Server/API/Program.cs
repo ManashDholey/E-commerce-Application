@@ -1,7 +1,10 @@
 
 using API.Extensions;
 using API.Middleware;
+using Core.Entities.Identity;
 using Infrastructure.Data;
+using Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +15,8 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddControllers();
 builder.Services.AddApplicationServices(builder.Configuration);
+builder.Services.AddIdentityServices(builder.Configuration);
+builder.Services.AddSwaggerDocumentation();
 // builder.Services.AddSwaggerGen();
 // builder.Services.AddDbContext<StoreContext>(opt=> {opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));});
 // builder.Services.AddScoped<IProductRepository,ProductRepository>();
@@ -38,7 +43,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseSwaggerDocumentation();
 app.UseHttpsRedirection();
 
 // var summaries = new[]
@@ -62,21 +67,21 @@ app.UseHttpsRedirection();
 // .WithOpenApi();
 app.UseStaticFiles();
 app.UseCors("CorsPolicy");
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 using var scope = app.Services.CreateScope();
 var services = scope.ServiceProvider;
 var context = services.GetRequiredService<StoreContext>();
-// var identityContext = services.GetRequiredService<AppIdentityDbContext>();
-// var userManager = services.GetRequiredService<UserManager<AppUser>>();
+ var identityContext = services.GetRequiredService<AppIdentityDbContext>();
+ var userManager = services.GetRequiredService<UserManager<AppUser>>();
 var logger = services.GetRequiredService<ILogger<Program>>();
 try
 {
     await context.Database.MigrateAsync();
     await StoreContextSheed.SeedAsync(context);
-    // await identityContext.Database.MigrateAsync();
-    // await StoreContextSeed.SeedAsync(context);
-    // await AppIdentityDbContextSeed.SeedUsersAsync(userManager);
+    await identityContext.Database.MigrateAsync();
+    await AppIdentityDBContextSeed.SeedUsersAsync(userManager);
 }
 catch (Exception ex)
 {
