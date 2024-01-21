@@ -6,10 +6,10 @@
     <ng-container *ngIf="(basketService.basketSource$ | async) as basket">
         <div class="container">
             <div class="row">
-                <!-- <app-basket-summary
+                <app-basket-summary
                     (addItem)="incrementQuantity($event)"
                     (removeItem)="removeItem($event)"
-                ></app-basket-summary> -->
+                ></app-basket-summary>
             </div>
 
             <div class="row">

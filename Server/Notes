@@ -1,0 +1,4 @@
+dotnet ef migrations add OrderEntityAdded -p Infrastructure -s API -c StoreContext
+--------------------------------------------------------------
+dotnet ef database update  IdentityInitial -p Infrastructure -s API -c AppIdentityDbContext
+---------------------------------------------------------------

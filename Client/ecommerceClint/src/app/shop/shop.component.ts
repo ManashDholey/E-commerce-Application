@@ -39,7 +39,8 @@ export class ShopComponent implements OnInit {
     // this.shopParams.pageSize=this.PageSize;
     // this.shopParams.sort=this.Sort;
      //this.shopParams.search=this.Search; 
-    this.shopService.getProducts(this.shopParams.brandId,this.shopParams.typeId).subscribe({
+     //this.shopParams.brandId,this.shopService.shopParams.typeId
+    this.shopService.getProducts().subscribe({
       next: (response) => { this.products = response.data.flat();
         console.log("this.products===>",this.products);
         this.totalCount = response.count;
@@ -69,11 +70,19 @@ export class ShopComponent implements OnInit {
     })
   }
   onBrandSelected(brandId:number){
-    this.shopParams.brandId=brandId;
+    var params = this.shopService.getShopParams(); 
+    params.brandId = brandId;
+    params.pageNumber = 1;
+    this.shopService.setShopParams(params);
+    this.shopParams = params;
     this.getProducts();
   }
   onTypeSelected(typeId:number){
-    this.shopParams.typeId=typeId;
+    var params = this.shopService.getShopParams(); 
+    params.typeId=typeId;
+    params.pageNumber = 1;
+    this.shopService.setShopParams(params);
+    this.shopParams = params;
     this.getProducts();
   }
   onPageChanged(event: any) {

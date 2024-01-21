@@ -15,7 +15,7 @@ namespace API.Extensions
         public static IServiceCollection AddApplicationServices(this IServiceCollection services,
             IConfiguration config)
         {
-           // services.AddSingleton<IResponseCacheService, ResponseCacheService>();
+         services.AddSingleton<IResponseCacheService, ResponseCacheService>();
          services.AddSwaggerGen();
          services.AddDbContext<StoreContext>(opt=> {opt.UseSqlite(config.GetConnectionString("DefaultConnection"));});
         services.AddSingleton<IConnectionMultiplexer>(c => 
@@ -23,9 +23,9 @@ namespace API.Extensions
                 var options = ConfigurationOptions.Parse(config.GetConnectionString("Redis"));
                 return ConnectionMultiplexer.Connect(options);
             });
-            //services.AddScoped<IBasketRepository, BasketRepository>();
+            services.AddScoped<IBasketRepository, BasketRepository>();
             services.AddScoped<IProductRepository, ProductRepository>();
-            // services.AddScoped<IPaymentService, PaymentService>();
+             services.AddScoped<IPaymentService, PaymentService>();
              services.AddScoped<ITokenService, TokenService>();
              services.AddScoped<IOrderService, OrderService>();
              services.AddScoped<IUnitOfWork, UnitOfWork>();
