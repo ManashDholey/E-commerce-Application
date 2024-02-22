@@ -7,16 +7,19 @@ import { NotFoundComponent } from './not-found/not-found.component';
 import { ToastrModule } from 'ngx-toastr';
 import { SectionHeaderComponent } from './section-header/section-header.component';
 import { BreadcrumbModule } from 'xng-breadcrumb';
+import { ServerErrorComponent } from './server-error/server-error.component';
 //import { NgxSpinnerModule } from 'ngx-spinner';
 
 
 
 @NgModule({
-  declarations: [ NavBarComponent, TestErrorComponent, NotFoundComponent, SectionHeaderComponent],
+  declarations: [ NavBarComponent, TestErrorComponent, NotFoundComponent, SectionHeaderComponent, ServerErrorComponent],
   imports: [
     CommonModule,
     RouterModule,
-    ToastrModule,
+    ToastrModule.forRoot({
+      positionClass :'toast-bottom-right'
+    }),
     BreadcrumbModule,
    // NgxSpinnerModule
   ],

@@ -16,6 +16,7 @@ namespace Infrastructure.Services
         public TokenService(IConfiguration config)
         {
             _config = config;
+            var d=_config["Token:Key"];
             _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Token:Key"]));
         }
         
@@ -43,5 +44,34 @@ namespace Infrastructure.Services
 
             return tokenHandler.WriteToken(token);
         }
+        public ClaimsPrincipal GetPrincipalFromToken(string token, string signingKey)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var validationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(signingKey)),
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            // Add any other validation parameters as needed
+        };
+
+        try
+        {
+            if(!string.IsNullOrEmpty(token)){
+            var d = token.Replace("Bearer ","");
+            var principal = tokenHandler.ValidateToken(d, validationParameters, out var securityToken);
+            return principal;
+            }
+            else{
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Token validation failed
+            return null;
+        }
+    }
     }
 }

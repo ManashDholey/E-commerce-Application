@@ -35,6 +35,7 @@ export class ShopComponent implements OnInit {
     this.getTypes();
   }
   getProducts() {
+    //debugger
     // this.shopParams.pageNumber=this.PageIndex;
     // this.shopParams.pageSize=this.PageSize;
     // this.shopParams.sort=this.Sort;

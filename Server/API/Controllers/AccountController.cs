@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using API.Dtos;
 using API.Errors;
 using API.Extensions;
@@ -8,28 +7,34 @@ using Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 
 namespace API.Controllers
 {
     public class AccountController : BaseApiController
     {
         private readonly UserManager<AppUser> _userManager;
+        private readonly IConfiguration _config;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly ITokenService _tokenService;
         private readonly IMapper _mapper;
         public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager,
-            ITokenService tokenService, IMapper mapper)
+            ITokenService tokenService, IMapper mapper,IConfiguration config)
         {
             _mapper = mapper;
             _tokenService = tokenService;
             _signInManager = signInManager;
             _userManager = userManager;
+            _config=config;;
         }
 
-        [Authorize]
-        [HttpGet]
+       // [Authorize]
+        [HttpGet("GetCurrentUser")]
         public async Task<ActionResult<UserDto>> GetCurrentUser()
         {
+            var accessToken = Request.Headers[HeaderNames.Authorization];
+            var data =_config["Token:Key"];
+            var userData = _tokenService.GetPrincipalFromToken(accessToken,_config["Token:Key"]);
             var user = await _userManager.FindByEmailFromClaimsPrincipal(User);
 
             return new UserDto
@@ -50,7 +55,6 @@ namespace API.Controllers
             var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
 
             if (!result.Succeeded) return Unauthorized(new ApiResponse(401));
-
             return new UserDto
             {
                 Email = user.Email,

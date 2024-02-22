@@ -2,3 +2,11 @@ dotnet ef migrations add OrderEntityAdded -p Infrastructure -s API -c StoreConte
 --------------------------------------------------------------
 dotnet ef database update  IdentityInitial -p Infrastructure -s API -c AppIdentityDbContext
 ---------------------------------------------------------------
+docker info
+docker-compose up --detach
+--------------------------------------------------------------------
+Redis:----install -->Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+ ===>choco install redis-64
+ redis-server 
+ redis-cli shutdown
+redis-server /path/to/your/redis.conf
