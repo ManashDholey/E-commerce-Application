@@ -1,6 +1,7 @@
 using API.Dtos;
 using API.Errors;
 using API.Extensions;
+using API.Helpers;
 using AutoMapper;
 using Core.Entities.Identity;
 using Core.Interfaces;
@@ -28,19 +29,20 @@ namespace API.Controllers
             _config=config;;
         }
 
-       // [Authorize]
+        [Helpers.AuthorizeAttribute]
         [HttpGet("GetCurrentUser")]
+        
         public async Task<ActionResult<UserDto>> GetCurrentUser()
         {
-            var accessToken = Request.Headers[HeaderNames.Authorization];
-            var data =_config["Token:Key"];
-            var userData = _tokenService.GetPrincipalFromToken(accessToken,_config["Token:Key"]);
+           // var accessToken = Request.Headers[HeaderNames.Authorization];
+          //  var data =_config["Token:Key"];
+            //var userData = _tokenService.GetPrincipalFromToken(accessToken,_config["Token:Key"]);
             var user = await _userManager.FindByEmailFromClaimsPrincipal(User);
 
             return new UserDto
             {
                 Email = user.Email,
-                Token = _tokenService.CreateToken(user),
+                Token =await _tokenService.CreateToken(user),
                 DisplayName = user.DisplayName
             };
         }
@@ -58,7 +60,7 @@ namespace API.Controllers
             return new UserDto
             {
                 Email = user.Email,
-                Token = _tokenService.CreateToken(user),
+                Token =await _tokenService.CreateToken(user),
                 DisplayName = user.DisplayName
             };
         }
@@ -86,7 +88,7 @@ namespace API.Controllers
             return new UserDto
             {
                 DisplayName = user.DisplayName,
-                Token = _tokenService.CreateToken(user),
+                Token = await _tokenService.CreateToken(user),
                 Email = user.Email
             };
         }
@@ -97,7 +99,7 @@ namespace API.Controllers
             return await _userManager.FindByEmailAsync(email) != null;
         }
 
-        [Authorize]
+        [Helpers.AuthorizeAttribute]
         [HttpGet("address")]
         public async Task<ActionResult<AddressDto>> GetUserAddress()
         {
@@ -106,7 +108,7 @@ namespace API.Controllers
             return _mapper.Map<Address, AddressDto>(user.Address);
         }
 
-        [Authorize]
+        [Helpers.AuthorizeAttribute]
         [HttpPut("address")]
         public async Task<ActionResult<AddressDto>> UpdateUserAddress(AddressDto address)
         {

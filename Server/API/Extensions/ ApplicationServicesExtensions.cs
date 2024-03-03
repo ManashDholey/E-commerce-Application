@@ -1,6 +1,8 @@
 
+using API.Dtos;
 using API.Errors;
 using API.Middleware;
+using Core.Entities;
 using Core.Interfaces;
 using Infrastructure.Data;
 using Infrastructure.Services;
@@ -23,10 +25,14 @@ namespace API.Extensions
                 var options = ConfigurationOptions.Parse(config.GetConnectionString("Redis"));
                 return ConnectionMultiplexer.Connect(options);
             });
+             services.Configure<AppSettings>(config.GetSection("AppSettings"));
              services.AddScoped<IBasketRepository, BasketRepository>();
+             services.AddScoped<IUserService,UserService>();
+            services.AddTransient<ITokenService, TokenService>();
+             services.AddScoped<IUserRepository, UserRepository>();
              services.AddScoped<IProductRepository, ProductRepository>();
              services.AddScoped<IPaymentService, PaymentService>();
-             services.AddScoped<ITokenService, TokenService>();
+            // services.AddScoped<ITokenService, TokenService>();
              services.AddScoped<IOrderService, OrderService>();
              services.AddScoped<IUnitOfWork, UnitOfWork>();
              services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
