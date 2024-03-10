@@ -1,4 +1,3 @@
-
 using API.Extensions;
 using API.Middleware;
 using Core.Entities.Identity;
@@ -6,12 +5,13 @@ using Infrastructure.Data;
 using Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
+//builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddControllers();
 builder.Services.AddApplicationServices(builder.Configuration);
@@ -35,6 +35,7 @@ builder.Services.AddSwaggerDocumentation();
 //      };
 // });
 var app = builder.Build();
+app.UseMiddleware<JwtMiddleware>();
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseStatusCodePagesWithRedirects("/error/{0}");
 // Configure the HTTP request pipeline.
@@ -44,7 +45,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 app.UseSwaggerDocumentation();
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 // var summaries = new[]
 // {
@@ -66,10 +67,15 @@ app.UseHttpsRedirection();
 // .WithName("GetWeatherForecast")
 // .WithOpenApi();
 app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "Content")), RequestPath = "/Content"
+});
 app.UseCors("CorsPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
+app.MapFallbackToController("Index", "Fallback");
 using var scope = app.Services.CreateScope();
 var services = scope.ServiceProvider;
 var context = services.GetRequiredService<StoreContext>();

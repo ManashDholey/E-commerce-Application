@@ -1,41 +1,48 @@
-using System.Security.Claims;
 using API.Dtos;
 using API.Errors;
 using API.Extensions;
+using API.Helpers;
 using AutoMapper;
 using Core.Entities.Identity;
 using Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 
 namespace API.Controllers
 {
     public class AccountController : BaseApiController
     {
         private readonly UserManager<AppUser> _userManager;
+        private readonly IConfiguration _config;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly ITokenService _tokenService;
         private readonly IMapper _mapper;
         public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager,
-            ITokenService tokenService, IMapper mapper)
+            ITokenService tokenService, IMapper mapper,IConfiguration config)
         {
             _mapper = mapper;
             _tokenService = tokenService;
             _signInManager = signInManager;
             _userManager = userManager;
+            _config=config;;
         }
 
-        [Authorize]
-        [HttpGet]
+        [Helpers.AuthorizeAttribute]
+        [HttpGet("GetCurrentUser")]
+        
         public async Task<ActionResult<UserDto>> GetCurrentUser()
         {
+           // var accessToken = Request.Headers[HeaderNames.Authorization];
+          //  var data =_config["Token:Key"];
+            //var userData = _tokenService.GetPrincipalFromToken(accessToken,_config["Token:Key"]);
             var user = await _userManager.FindByEmailFromClaimsPrincipal(User);
 
             return new UserDto
             {
                 Email = user.Email,
-                Token = _tokenService.CreateToken(user),
+                Token =await _tokenService.CreateToken(user),
                 DisplayName = user.DisplayName
             };
         }
@@ -50,11 +57,10 @@ namespace API.Controllers
             var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
 
             if (!result.Succeeded) return Unauthorized(new ApiResponse(401));
-
             return new UserDto
             {
                 Email = user.Email,
-                Token = _tokenService.CreateToken(user),
+                Token =await _tokenService.CreateToken(user),
                 DisplayName = user.DisplayName
             };
         }
@@ -82,7 +88,7 @@ namespace API.Controllers
             return new UserDto
             {
                 DisplayName = user.DisplayName,
-                Token = _tokenService.CreateToken(user),
+                Token = await _tokenService.CreateToken(user),
                 Email = user.Email
             };
         }
@@ -93,7 +99,7 @@ namespace API.Controllers
             return await _userManager.FindByEmailAsync(email) != null;
         }
 
-        [Authorize]
+        [Helpers.AuthorizeAttribute]
         [HttpGet("address")]
         public async Task<ActionResult<AddressDto>> GetUserAddress()
         {
@@ -102,7 +108,7 @@ namespace API.Controllers
             return _mapper.Map<Address, AddressDto>(user.Address);
         }
 
-        [Authorize]
+        [Helpers.AuthorizeAttribute]
         [HttpPut("address")]
         public async Task<ActionResult<AddressDto>> UpdateUserAddress(AddressDto address)
         {

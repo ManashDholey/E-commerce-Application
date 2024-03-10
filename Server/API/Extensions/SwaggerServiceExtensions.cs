@@ -10,6 +10,7 @@ namespace API.Extensions
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(c => 
             {
+                c.CustomSchemaIds(type => type.ToString());
                 var securitySchema = new OpenApiSecurityScheme
                 {
                     Description = "JWT Auth Bearer Scheme",
@@ -23,18 +24,14 @@ namespace API.Extensions
                         Id = "Bearer"
                     }
                 };
-
                 c.AddSecurityDefinition("Bearer", securitySchema);
-
                 var securityRequirement = new OpenApiSecurityRequirement
                 {
                     {
                         securitySchema, new[] {"Bearer"}
                     }
                 };
-
                 c.AddSecurityRequirement(securityRequirement);
-                
             });
             return services;
         }
@@ -43,7 +40,6 @@ namespace API.Extensions
         {
             app.UseSwagger();
             app.UseSwaggerUI();
-
             return app;
         }
     }

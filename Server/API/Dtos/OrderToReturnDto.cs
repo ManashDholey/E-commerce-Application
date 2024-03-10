@@ -1,7 +1,10 @@
 
 
+//using Swashbuckle.AspNetCore.Annotations;
+
 namespace API.Dtos
 {
+    // [SwaggerSchema("OrderToReturnDto")]
     public class OrderToReturnDto
     {
          public int Id { get; set; }

@@ -35,10 +35,10 @@ namespace API.Controllers
         public ActionResult GetServerError()
         {
             var thing = _context.Products.Find(42);
-
+             if (thing == null) return NotFound(new ApiResponse(404));
             var thingToReturn = thing.ToString();
 
-            return Ok();
+            return Ok(thingToReturn);
         }
 
         [HttpGet("badrequest")]
