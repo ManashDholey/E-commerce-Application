@@ -39,7 +39,7 @@ namespace Infrastructure.Data
         {
             return await _context.Products.Include(p => p.ProductBrand)
             .Include(p=> p.ProductType)
-            .FirstOrDefaultAsync(e=> e.Id == id)?? new Product();
+            .FirstOrDefaultAsync(e=> e.Id == id);
         }
     }
 }
