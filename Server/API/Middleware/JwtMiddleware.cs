@@ -1,6 +1,8 @@
 ﻿using API.Dtos;
 using Core.Entities;
 using Core.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -23,6 +25,11 @@ namespace API.Middleware
 
         public async Task Invoke(HttpContext context, IUserService userService)
         {
+            if (ShouldSkipAuthentication(context))
+            {
+                await _next(context);
+                return;
+            }
             var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 
             if (token != null)
@@ -52,7 +59,19 @@ namespace API.Middleware
         //        throw new Exception(ex.ToString());
         //    }
         //}
+        private bool ShouldSkipAuthentication(HttpContext context)
+        {
+            // Get endpoint information
+            var endpoint = context.Features.Get<IEndpointFeature>()?.Endpoint;
+            if (endpoint == null)
+            {
+                return false; // Fallback if endpoint info is unavailable
+            }
 
+            // Check if the endpoint has the AllowAnonymous attribute
+            var allowAnonymous = endpoint.Metadata.GetMetadata<AllowAnonymousAttribute>() != null;
+            return allowAnonymous;
+        }
         private async Task attachUserToContext(HttpContext context, IUserService userService, string token)
         {
             try
@@ -88,10 +107,19 @@ namespace API.Middleware
                 //Attach user to context on successful JWT validation
                 context.Items["User"] = await userService.GetById(userId);
             }
-            catch
+            catch(SecurityTokenExpiredException)
             {
+                throw new UnauthorizedAccessException("Token has expired");
                 //Do nothing if JWT validation fails
                 // user is not attached to context so the request won't have access to secure routes
+            }
+            catch (SecurityTokenValidationException)
+            {
+                throw new UnauthorizedAccessException("Token validation failed");
+            }
+            catch (Exception)
+            {
+                throw new UnauthorizedAccessException("Token validation failed");
             }
         }
     }

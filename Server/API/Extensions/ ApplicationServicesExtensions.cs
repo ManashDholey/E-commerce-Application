@@ -1,4 +1,3 @@
-
 using API.Dtos;
 using API.Errors;
 using API.Middleware;
@@ -28,7 +27,7 @@ namespace API.Extensions
              services.Configure<AppSettings>(config.GetSection("AppSettings"));
              services.AddScoped<IBasketRepository, BasketRepository>();
              services.AddScoped<IUserService,UserService>();
-            services.AddTransient<ITokenService, TokenService>();
+             services.AddTransient<ITokenService, TokenService>();
              services.AddScoped<IUserRepository, UserRepository>();
              services.AddScoped<IProductRepository, ProductRepository>();
              services.AddScoped<IPaymentService, PaymentService>();
