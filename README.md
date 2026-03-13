@@ -1,175 +1,183 @@
-# E-commerce Application
+# E-commerce Application — Backend Architecture & Design Patterns
 
-Full‑stack e‑commerce project with:
+This document explains the backend architecture used in this repository (Server/API, Server/Core, Server/Infrastructure), the main design patterns applied, and the request processing flow.
 
-- **Backend:** ASP.NET Core **.NET 8** Web API (Clean Architecture style: API / Core / Infrastructure)
-- **Frontend:** **Angular 15** client app
-- **Integrations:** **Stripe** payments, **Redis** for caching, JWT-based authentication
+The backend follows a layered / clean architecture approach with explicit separation of concerns:
 
-> Repo layout:
->
-> - `Client/ecommerceClint` → Angular app
-> - `Server` → .NET solution (`Server.sln`) containing API/Core/Infrastructure projects
+## Clean Architecture Diagram
 
----
+Below is a visual representation of the Clean (Layered) Architecture used by the backend.
 
-## Tech Stack
+### Mermaid diagram (rendered on platforms that support Mermaid)
 
-### Client (Angular)
-- Angular `15.2.x`
-- Bootstrap + Bootswatch, Font Awesome
-- ngx-bootstrap, ngx-spinner, ngx-toastr
-- Stripe.js (`@stripe/stripe-js`)
+```mermaid
+flowchart TD
+  subgraph Presentation
+    API[API<br/>Presentation Layer<br/>(Controllers, Middleware)]
+  end
 
-### Server (.NET)
-- ASP.NET Core Web API (`net8.0`)
-- Entity Framework Core (SQLite)
-- ASP.NET Core Identity (Identity DB)
-- JWT Authentication
-- Swagger / OpenAPI (Swashbuckle)
-- Redis (StackExchange.Redis)
-- Stripe (`Stripe.net`)
+  subgraph Application
+    App[Application Services<br/>(Use Cases, DTOs, Mapping)]
+  end
 
----
+  subgraph Domain
+    Core[Core / Domain<br/>(Entities, Interfaces, Specifications)]
+  end
 
-## Getting Started
+  subgraph Infrastructure
+    Infra[Infrastructure<br/>(EF Core, Identity, Repositories, Redis, Stripe)]
+  end
 
-### Prerequisites
-- **Node.js + npm** (for Angular)
-- **Angular CLI** (optional, but recommended)
-- **.NET SDK 8**
-- **Docker** (optional, for Redis via compose)
+  subgraph External
+    DB[(SQLite / RDBMS)]
+    REDIS[(Redis)]
+    STRIPE[(Stripe)]
+    FILES[(Static Files / CDN)]
+  end
 
----
+  Client[Client<br/>(Angular)] -->|HTTP / REST| API
+  API -->|calls| App
+  App -->|depends on| Core
+  App -->|uses implementations| Infra
+  Infra --> DB
+  Infra --> REDIS
+  Infra --> STRIPE
+  API -->|serves| FILES
 
-## Running the Backend (API)
-
-### 1) Start Redis (optional but recommended)
-From the `Server` directory:
-
-```bash
-docker-compose up --detach
+  %% dashed arrow to show direction of dependency inversion
+  Core -.->|abstractions implemented by| Infra
 ```
 
-This starts:
-- `redis` on `6379`
-- `redis-commander` UI on `http://localhost:8081` (default credentials are in `docker-compose.yml`)
+### ASCII fallback (if Mermaid is not rendered)
 
-### 2) Run the API
-From the `Server` directory:
-
-```bash
-dotnet restore
-dotnet run --project API
-```
-
-The API config uses SQLite db files (see `appsettings.json`), and the app runs EF migrations + seeders automatically at startup.
-
-### Swagger
-Swagger is enabled in development. Once running, open the Swagger UI at the API base URL (commonly something like `https://localhost:5001/swagger` depending on your launch profile).
-
----
-
-## Running the Frontend (Angular)
-
-From `Client/ecommerceClint`:
-
-```bash
-npm install
-npm start
-```
-
-Angular dev server runs at:
-
-- `http://localhost:4200/`
-
----
-
-## Configuration
-
-### Server configuration files
-- `Server/API/appsettings.json`
-- `Server/API/appsettings.Development.json`
-
-Key settings included:
-
-- `ConnectionStrings:DefaultConnection` (SQLite)
-- `ConnectionStrings:IdentityConnection` (SQLite)
-- `ConnectionStrings:Redis` (defaults to `localhost`)
-- `StripeSettings` (PublishableKey, SecretKey, Webhook secret)
-- `Token` (JWT signing key + issuer)
-
-> Important security note:
-> The repository currently contains Stripe keys and a JWT signing key in `appsettings.json`.
-> For real usage, **rotate these secrets** and move them to **User Secrets / environment variables** (and remove them from git history if this repo is public).
-
-### Redis
-If you run Redis using Docker Compose, your server can keep using:
-
-- `ConnectionStrings:Redis = "localhost"`
-
-If Redis is not running, some features that depend on it may fail (depending on how caching is used in the code).
+Client (Angular)
+  |
+  v
++-------------------------------+
+| Presentation (API)            |
+| - Controllers                 |
+| - Middleware (JWT, Errors)    |
++-------------------------------+
+  |
+  v
++-------------------------------+
+| Application / Services        |
+| - Use Cases                   |
+| - DTOs / Mapping (AutoMapper) |
++-------------------------------+
+  |
+  v
++-------------------------------+
+| Domain (Core)                 |
+| - Entities                    |
+| - Interfaces (Repositories)   |
+| - Specifications              |
++-------------------------------+
+  |
+  v
++-------------------------------+
+| Infrastructure                |
+| - EF Core / DbContexts        |
+| - Identity                    |
+| - Redis, Stripe integrations  |
+| - Repositories (implementation)|
++-------------------------------+
+  |
+  v
+External: SQLite / RDBMS, Redis, Stripe, Static Files/CDN
 
 ---
 
-## Database & Migrations
+## Architecture summary (conceptual)
+The backend follows a layered / clean architecture approach with explicit separation of concerns:
 
-This solution uses EF Core with SQLite (based on `appsettings.json` connection strings).
+- Presentation layer: Server/API
+  - Web API controllers, middleware, swagger, static file hosting, program startup (Program.cs).
+- Domain layer: Server/Core
+  - Domain entities, repository interfaces, specifications, and pure business rules.
+- Infrastructure layer: Server/Infrastructure
+  - Implementations for persistence (EF Core / DbContexts), Identity, cache (Redis), third-party integrations (Stripe), repositories, services.
 
-Helpful commands (also noted in `Server/Notes`):
+The API project references Infrastructure; Infrastructure references Core. This keeps business logic and contracts (Core) independent of implementation details.
 
-```bash
-dotnet ef migrations add <MigrationName> -p Infrastructure -s API -c StoreContext
-dotnet ef database update -p Infrastructure -s API -c StoreContext
-```
+## Primary design patterns used
 
-Identity context example:
+1. Clean / Layered Architecture
+   - Purpose: separate concerns (API, domain, infrastructure) so the domain is independent of frameworks and infrastructure.
+   - How it shows: `Core` contains interfaces and entities; `Infrastructure` implements them and is referenced by `API`.
 
-```bash
-dotnet ef database update IdentityInitial -p Infrastructure -s API -c AppIdentityDbContext
-```
+2. Dependency Injection (DI)
+   - Purpose: decouple components and make them testable.
+   - How it shows: Services and repositories are registered inside `Program.cs` through extension methods (`AddApplicationServices`, `AddIdentityServices`) and injected into controllers and services.
+
+3. Repository Pattern
+   - Purpose: abstract data access behind interfaces so domain code does not depend on EF Core directly.
+   - How it shows: Interfaces for repositories exist in Core and concrete repository implementations live in Infrastructure.
+
+4. Specification Pattern
+   - Purpose: encapsulate query logic as reusable specifications.
+   - How it shows: Project contains a `Specification` folder inside `Core` for query/filter specifications used by repositories.
+
+5. Middleware Pattern
+   - Purpose: centralize cross-cutting concerns (authentication, error handling, logging).
+   - How it shows:
+     - `JwtMiddleware` — custom JWT extraction/validation and attaching user context.
+     - `ExceptionMiddleware` — centralized exception handling and consistent error responses.
+     - These are wired in `Program.cs`.
+
+6. DTO / Mapping Pattern (Anti-corruption layer for input/output)
+   - Purpose: prevent leaking domain entities to the outside; map domain entities to DTOs for API responses.
+   - How it shows: `Dtos` folder in API and AutoMapper referenced in API.csproj.
+
+7. Configuration & Secrets Management (recommended pattern)
+   - Purpose: keep configuration separate from code; use environment variables for secrets.
+   - How it shows: `appsettings.json` and `appsettings.Development.json` are used for configuration. (Note: current repo contains secrets in appsettings — move to env vars or secret stores for production.)
+
+8. Seeding & Migration Strategy
+   - Purpose: ensure DB schema and seed data are available on startup during development.
+   - How it shows: `Program.cs` runs `context.Database.MigrateAsync()` and seeders (`StoreContextSheed.SeedAsync`, `AppIdentityDBContextSeed.SeedUsersAsync`) at startup.
+
+## Request processing flow (step-by-step)
+
+1. Client -> HTTP request (Kestrel)
+2. Incoming request reaches the middleware pipeline (configured in `Server/API/Program.cs`):
+   - Static files handling
+   - `JwtMiddleware` — extracts token, validates it (attaches user context)
+   - `ExceptionMiddleware` — catches unhandled exceptions and returns structured errors
+   - Status code pages / redirects
+   - CORS policy
+   - Authentication + Authorization middleware
+3. Controller execution (API layer)
+   - Controllers read DTOs from request, validate inputs (ModelState).
+   - Controllers call application services or repository interfaces (defined in `Core`) that are implemented in `Infrastructure`.
+4. Domain logic (Core + service layer)
+   - Business rules executed (domain entities, validations, specs).
+   - Repositories fetch/persist data. Query logic may be expressed as Specification objects passed to repositories.
+5. Infrastructure layer interactions
+   - EF Core DbContext performs database operations (StoreContext, AppIdentityDbContext).
+   - Redis (StackExchange.Redis) used for caching where implemented.
+   - Stripe SDK used for payments and webhooks; webhooks validated with `WhSecret` from configuration.
+6. Response returns to controller, is mapped to DTO and sent back to client.
+7. Global middleware (ExceptionMiddleware) formats any errors consistently.
+
+## Project structure (quick map)
+- `Server/API` — Presentation (Controllers, Middleware, Program.cs)
+- `Server/Core` — Domain (Entities, Interfaces, Specifications)
+- `Server/Infrastructure` — Implementations (EF Core, Identity, Repositories, Services)
+- `Client/ecommerceClint` — Angular application
+
+## Practical notes / suggestions
+- Move secrets out of `appsettings.json` to environment variables or a secret manager.
+- For production, replace SQLite with a production-grade DB and host static files in a shared store or CDN.
+- Use Redis when running multiple API instances (for distributed caching).
+- Add integration tests for payment/webhook and auth flows.
+- Consider adding health/readiness endpoints if deploying to container orchestrators.
 
 ---
 
-## Project Structure (Server)
+If you'd like, I can:
+- Add a dedicated Mermaid diagram file (e.g., `docs/architecture.mmd`) and reference it from README.
+- Generate a PNG/SVG from the Mermaid diagram and add it to the repo.
+- Expand the diagram into a request sequence diagram and include it in README.
 
-- `Server/API`
-  - Controllers, DTOs, Middleware, Extensions
-  - `Program.cs` configures services, middleware, CORS, auth, swagger, static file hosting, and applies migrations + seeding.
-- `Server/Core`
-  - Domain entities, interfaces, specifications
-- `Server/Infrastructure`
-  - EF Core data access, identity implementation, services (Redis/Stripe/etc.)
-
----
-
-## Useful Notes
-
-- Static files:
-  - API serves static files and also exposes `Server/API/Content` under `/Content`
-- CORS:
-  - Enabled via a named policy: `"CorsPolicy"` (configured in service extensions)
-
----
-
-## Scripts
-
-### Client scripts (`Client/ecommerceClint/package.json`)
-- `npm start` → `ng serve`
-- `npm run build` → production build
-- `npm test` → Karma unit tests
-
----
-
-## Contributing
-
-1. Fork the repo
-2. Create a feature branch
-3. Commit your changes
-4. Open a pull request
-
----
-
-## License
-
-No license file was found in the repository. If you want others to use/modify this code, add a `LICENSE` file (e.g., MIT).
+Which of those would you like me to do next?
