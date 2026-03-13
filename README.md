@@ -13,19 +13,19 @@ Below is a visual representation of the Clean (Layered) Architecture used by the
 ```mermaid
 flowchart TD
   subgraph Presentation
-    API[API<br/>Presentation Layer<br/>(Controllers, Middleware)]
+    API["API\nPresentation Layer\n(Controllers, Middleware)"]
   end
 
   subgraph Application
-    App[Application Services<br/>(Use Cases, DTOs, Mapping)]
+    App["Application Services\n(Use Cases, DTOs, Mapping)"]
   end
 
   subgraph Domain
-    Core[Core / Domain<br/>(Entities, Interfaces, Specifications)]
+    Core["Core / Domain\n(Entities, Interfaces, Specifications)"]
   end
 
   subgraph Infrastructure
-    Infra[Infrastructure<br/>(EF Core, Identity, Repositories, Redis, Stripe)]
+    Infra["Infrastructure\n(EF Core, Identity, Repositories, Redis, Stripe)"]
   end
 
   subgraph External
@@ -35,7 +35,7 @@ flowchart TD
     FILES[(Static Files / CDN)]
   end
 
-  Client[Client<br/>(Angular)] -->|HTTP / REST| API
+  Client["Client\n(Angular)"] -->|HTTP / REST| API
   API -->|calls| App
   App -->|depends on| Core
   App -->|uses implementations| Infra
@@ -172,12 +172,3 @@ The API project references Infrastructure; Infrastructure references Core. This 
 - Use Redis when running multiple API instances (for distributed caching).
 - Add integration tests for payment/webhook and auth flows.
 - Consider adding health/readiness endpoints if deploying to container orchestrators.
-
----
-
-If you'd like, I can:
-- Add a dedicated Mermaid diagram file (e.g., `docs/architecture.mmd`) and reference it from README.
-- Generate a PNG/SVG from the Mermaid diagram and add it to the repo.
-- Expand the diagram into a request sequence diagram and include it in README.
-
-Which of those would you like me to do next?
